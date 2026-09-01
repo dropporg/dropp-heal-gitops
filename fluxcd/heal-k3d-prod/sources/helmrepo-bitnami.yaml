@@ -1,0 +1,17 @@
+# Charts for MySQL and phpMyAdmin.
+#
+# Replaces the pockost and wso2 repositories: charts.pockost.com no longer
+# resolves in DNS, and helm.wso2.com answers 403 without a subscription.
+# Neither can be reconciled from, so both HelmReleases would stay not-ready.
+#
+# Bitnami publishes OCI artifacts rather than an HTTP index, so type: oci. The
+# charts' default images moved in 2025; the helmreleases override the registry.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: bitnami
+  namespace: flux-system
+spec:
+  type: oci
+  interval: 1h
+  url: oci://registry-1.docker.io/bitnamicharts

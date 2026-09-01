@@ -1,0 +1,10 @@
+# The application chart, published to the gh-pages branch of dropp-heal as a
+# plain Helm index. Public, so no credentials.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: heal
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://dropporg.github.io/dropp-heal
