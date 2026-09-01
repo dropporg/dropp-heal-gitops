@@ -1,0 +1,21 @@
+# phpMyAdmin has no auth in front of it beyond MySQL's own, so it gets its own
+# hostname rather than sharing the path prefixes the api and dashboard use.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: phpmyadmin
+  namespace: heal
+spec:
+  parentRefs:
+    - name: heal-gateway
+      namespace: envoy-gateway-system
+  hostnames:
+    - pma-prod.heal.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: phpmyadmin
+          port: 80
