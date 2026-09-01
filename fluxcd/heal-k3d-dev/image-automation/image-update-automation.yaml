@@ -1,0 +1,35 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: heal-dev
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: heal-gitops
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: flux-image-automation
+        email: flux@dropp.local
+      # .Changed, not .Updated. .Updated was removed in Flux 2.x, and an
+      # automation using it fails to render its commit message, so nothing is
+      # pushed while the object still reports "repository up-to-date".
+      messageTemplate: |
+        chore(dev): update image tags
+
+        {{ range .Changed.Changes -}}
+        - {{ .OldValue }} -> {{ .NewValue }}
+        {{ end -}}
+
+        Automated by Flux. Git remains the source of truth.
+    push:
+      branch: main
+  update:
+    # This cluster's directory only, so a dev bump cannot rewrite prod.
+    path: ./fluxcd/heal-k3d-dev
+    strategy: Setters

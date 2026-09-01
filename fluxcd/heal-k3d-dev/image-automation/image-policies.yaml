@@ -1,0 +1,70 @@
+# heal-k3d-dev image selection.
+#
+# CI publishes two tags per build: the commit sha, and a semver tag from the
+# component tag that triggered it (api/v0.0.1-beta.1 gives v0.0.1-beta.1).
+# filterTags keeps only the second, since sha tags are not semver and would
+# sort unpredictably.
+#
+# The capture group strips the leading v so the values sort as semver, and the
+# extract puts it back, so the tag written into the HelmRelease matches what
+# the registry holds exactly.
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: heal-api
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: heal-api
+  filterTags:
+    pattern: '^v(?P<version>\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?)$'
+    extract: 'v$version'
+  policy:
+    semver:
+      range: '>=0.0.1-0'
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: heal-worker
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: heal-worker
+  filterTags:
+    pattern: '^v(?P<version>\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?)$'
+    extract: 'v$version'
+  policy:
+    semver:
+      range: '>=0.0.1-0'
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: heal-dashboard
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: heal-dashboard
+  filterTags:
+    pattern: '^v(?P<version>\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?)$'
+    extract: 'v$version'
+  policy:
+    semver:
+      range: '>=0.0.1-0'
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: heal-migrate
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: heal-migrate
+  filterTags:
+    pattern: '^v(?P<version>\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?)$'
+    extract: 'v$version'
+  policy:
+    semver:
+      range: '>=0.0.1-0'
