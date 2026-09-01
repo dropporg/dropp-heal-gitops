@@ -1,0 +1,40 @@
+# Attaches to the cluster Gateway that dropp-infra installs.
+#
+# The listener hostname is *.heal.local, and a Gateway API wildcard matches
+# exactly one label: heal.heal.local matches, heal.local does not. A route
+# outside the pattern attaches silently and never serves.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: heal
+  namespace: heal
+spec:
+  parentRefs:
+    - name: heal-gateway
+      namespace: envoy-gateway-system
+  hostnames:
+    - heal.heal.local
+  rules:
+    # The api owns three prefixes and the dashboard gets the rest. Gateway API
+    # sorts matches by specificity, not document order; the api is listed first
+    # only so it reads clearly.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+        - path:
+            type: PathPrefix
+            value: /metrics
+        - path:
+            type: PathPrefix
+            value: /probe
+      backendRefs:
+        - name: heal-api
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: heal-dashboard
+          port: 80

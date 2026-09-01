@@ -1,0 +1,110 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: heal
+  namespace: heal
+spec:
+  interval: 5m
+  releaseName: heal
+  chart:
+    spec:
+      chart: heal
+      # Pinned, not a range. A range would move the running release with no
+      # commit to point at.
+      version: "1.0.0-beta.3"
+      sourceRef:
+        kind: HelmRepository
+        name: heal
+        namespace: flux-system
+      interval: 10m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+    cleanupOnFail: true
+  # Reverts hand edits to the release on the next reconcile.
+  driftDetection:
+    mode: enabled
+  values:
+    # Without this the chart names resources <release>-<chart>, so "heal-heal-api",
+    # which the HTTPRoute would then have to use.
+    fullnameOverride: heal
+
+    image:
+      registry: ghcr.io/dropporg
+
+    secrets:
+      existingSecret: heal-credentials
+
+    mysql:
+      host: mysql
+      port: 3306
+      database: heal
+      user: heal
+
+    influxdb:
+      url: http://influxdb-influxdb2:8086
+      org: heal
+      bucket: heal
+
+    # Each component is released on its own cadence, so each pins its own tag.
+    # The chart falls back to its appVersion, which tracks the product-wide
+    # release/* version and follows no single service, so inheriting it would
+    # resolve every image to an unrelated version.
+    #
+    # The trailing marker is what Flux image automation rewrites. Deleting it
+    # stops the tag from ever being updated, with no error.
+    api:
+      image:
+        tag: v0.0.1-beta.1 # {"$imagepolicy": "flux-system:heal-api:tag"}
+      replicaCount: 3
+      autoscaling:
+        enabled: false
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 384Mi
+
+    worker:
+      image:
+        tag: v0.0.1-beta.1 # {"$imagepolicy": "flux-system:heal-worker:tag"}
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 384Mi
+
+    dashboard:
+      image:
+        tag: v0.0.1-beta.1 # {"$imagepolicy": "flux-system:heal-dashboard:tag"}
+      replicaCount: 2
+      autoscaling:
+        enabled: false
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 384Mi
+
+    migrations:
+      image:
+        tag: v0.0.1-beta.1 # {"$imagepolicy": "flux-system:heal-migrate:tag"}
+      enabled: true
+
+    # The chart ships a networking.k8s.io Ingress. These clusters run Envoy
+    # Gateway and have no Ingress controller, so the HTTPRoute does the routing.
+    ingress:
+      enabled: false
+
+    metrics:
+      serviceMonitor:
+        # No Prometheus Operator yet; see monitoring/.
+        enabled: false
