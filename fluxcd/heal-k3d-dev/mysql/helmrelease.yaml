@@ -1,0 +1,77 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mysql
+  namespace: heal
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: mysql
+      version: "14.0.3"
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+    cleanupOnFail: true
+  driftDetection:
+    mode: enabled
+  values:
+    # Bitnami moved its public images in 2025. docker.io/bitnami/mysql now
+    # 404s for these tags and the same content is under bitnamilegacy. The
+    # chart still defaults to the old path, so without this override every pod
+    # sits in ImagePullBackOff with a manifest-unknown error.
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/mysql
+      tag: 9.4.0-debian-12-r1
+    global:
+      security:
+        # The chart rejects non-official image paths unless told the substitution
+        # is intended.
+        allowInsecureImages: true
+    architecture: standalone
+    auth:
+      database: heal
+      username: heal
+      existingSecret: mysql-credentials
+    primary:
+      # The chart's probes run mysqladmin, and its defaults allow one second.
+      # On a busy host the exec alone takes longer, so kubelet kills a healthy
+      # database. The events read "Liveness probe failed: command timed out",
+      # never "connection refused". These timings give the probe room without
+      # letting a genuinely stuck server sit forever.
+      livenessProbe:
+        initialDelaySeconds: 120
+        periodSeconds: 30
+        timeoutSeconds: 15
+        failureThreshold: 6
+      readinessProbe:
+        initialDelaySeconds: 30
+        periodSeconds: 20
+        timeoutSeconds: 15
+        failureThreshold: 6
+      startupProbe:
+        initialDelaySeconds: 30
+        periodSeconds: 15
+        timeoutSeconds: 15
+        failureThreshold: 40
+      persistence:
+        enabled: true
+        size: 2Gi
+      resources:
+        requests:
+          cpu: 50m
+          memory: 384Mi
+        limits:
+          memory: 768Mi
+    metrics:
+      enabled: false
