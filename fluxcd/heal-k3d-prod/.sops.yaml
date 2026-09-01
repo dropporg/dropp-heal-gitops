@@ -1,0 +1,13 @@
+# SOPS rules for heal-k3d-prod.
+#
+# This directory and this cluster's key only, so heal-k3d-prod cannot decrypt
+# the other environment's credentials. dropp-infra delivers the private half
+# into the cluster as the sops-gpg-heal Secret.
+#
+# sops finds its config by walking up from the working directory, not from the
+# file, so encrypt from inside this directory or pass --config. See
+# SOPS-GUIDE.md.
+creation_rules:
+  - path_regex: .*\.sops\.ya?ml$
+    pgp: '4F242C5432025E721A0EFAC014E9B7D113F96874'
+    encrypted_regex: '^(data|stringData)$'
