@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# No blanket `namespace:` here on purpose.
+#
+# It would rewrite every resource, including the ones that belong in
+# flux-system: the HelmRepositories in sources/ and everything in
+# image-automation/. Setting it to `heal` moves those into the application
+# namespace, where the HelmReleases cannot find them and every release fails
+# with "failed to get source". Each manifest sets its own namespace instead.
+resources:
+  # In dependency order. Kustomize applies one set, but on a first install the
+  # sources and credentials have to exist before anything uses them, and the
+  # datastores before the application connects to them.
+  - sources
+  - secrets
+  - mysql
+  - influxdb
+  - phpmyadmin
+  - heal
+  - image-automation
+  # monitoring/ is an empty placeholder and is not listed. Kustomize fails on
+  # a directory with no kustomization.yaml, so it joins this list in the same
+  # commit that gives it content.
