@@ -1,0 +1,22 @@
+# Decrypted secrets. Anything matching these has left SOPS and must never be
+# committed; the encrypted *.sops.yaml files are the ones that belong in Git.
+*.dec.yaml
+*.decrypted.yaml
+*.plain.yaml
+.env
+*.env.local
+
+# Exported key material.
+*.asc
+*.gpg
+*.pem
+*.key
+
+# Local kubeconfigs.
+*.kubeconfig
+kubeconfig*
+
+# Helm and editor noise.
+charts/
+*.tgz
+.DS_Store
