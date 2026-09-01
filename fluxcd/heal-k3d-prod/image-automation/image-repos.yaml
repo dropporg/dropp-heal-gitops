@@ -1,0 +1,37 @@
+# One per component, since each is versioned and released independently. The
+# packages are public, so no secretRef.
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: heal-api
+  namespace: flux-system
+spec:
+  image: ghcr.io/dropporg/heal-api
+  interval: 5m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: heal-worker
+  namespace: flux-system
+spec:
+  image: ghcr.io/dropporg/heal-worker
+  interval: 5m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: heal-dashboard
+  namespace: flux-system
+spec:
+  image: ghcr.io/dropporg/heal-dashboard
+  interval: 5m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: heal-migrate
+  namespace: flux-system
+spec:
+  image: ghcr.io/dropporg/heal-migrate
+  interval: 5m
